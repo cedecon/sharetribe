@@ -35,6 +35,23 @@ namespace :sharetribe do
       seq.sort() == seq
     end
 
+    def pending_migrations
+      migration_paths = ActiveRecord::Migrator.migrations_paths
+      all_migrations = ActiveRecord::Migrator.migrations(migration_paths)
+      migrator = ActiveRecord::Migrator.new(:up, all_migrations, ActiveRecord::Migrator.last_version())
+      migrator.pending_migrations()
+    end
+
+    namespace :migrate do
+      # Make sure there are no pending migrations. Exit with failure otherwise.
+      task :ensure_latest => [:environment] do |t, args|
+        unless pending_migrations().empty?
+          puts "There are pending migrations!"
+          raise StandardError.new("There are pending migrations!")
+        end
+      end
+    end
+
     # Run DB migrations automatically for the given execution stage (pre-deploy, post-deploy)
     # based on definitions in db/migration_automation.yml.
     # Stops at the first manual migration or the first migration of a different execution stage.
@@ -47,10 +64,7 @@ namespace :sharetribe do
       puts "Current database version: #{ActiveRecord::Migrator.current_version()}"
       puts "Last available version: #{ActiveRecord::Migrator.last_version()}"
 
-      migration_paths = ActiveRecord::Migrator.migrations_paths
-      all_migrations = ActiveRecord::Migrator.migrations(migration_paths)
-      migrator = ActiveRecord::Migrator.new(:up, all_migrations, ActiveRecord::Migrator.last_version())
-      pending_migrations = migrator.pending_migrations()
+      pending_migrations = pending_migrations()
 
       if pending_migrations.empty?
         puts "No pending migrations."
