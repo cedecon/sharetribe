@@ -27,4 +27,4 @@ services:
     labels:
       - convox.deployment.minimum=0
       - convox.deployment.maximum=200
-    command: bundle exec rake jobs:work
+    command: [ "bundle", "exec", "rake", "jobs:work" ]
