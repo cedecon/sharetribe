@@ -57,10 +57,6 @@ const syncWindowWidthTo = (el) => {
   /* eslint-enable no-param-reassign */
 };
 
-const preventDefault = (e) => {
-  e.preventDefault();
-};
-
 const SideWinderContent = (props) => div(
   { className: css.content },
   [
@@ -82,6 +78,7 @@ class SideWinder extends Component {
     super(props, context);
     this.update = this.update.bind(this);
     this.onWindowKeyUp = this.onWindowKeyUp.bind(this);
+    this.onBodyTouchMove = this.onBodyTouchMove.bind(this);
   }
   componentDidMount() {
     this.props.wrapper.classList.add(css.wrapper);
@@ -92,22 +89,22 @@ class SideWinder extends Component {
     // to the wrapper element, and React handles the tree within the
     // el element.
 
-    this.el = document.createElement('div');
-    this.el.style.width = `${this.props.width}px`;
-    this.el.style.right = `-${this.props.width}px`;
-    this.el.className = css.root;
+    this.rootEl = document.createElement('div');
+    this.rootEl.style.width = `${this.props.width}px`;
+    this.rootEl.style.right = `-${this.props.width}px`;
+    this.rootEl.className = css.root;
 
-    this.overlay = document.createElement('div');
-    this.overlay.className = css.overlay;
-    this.overlay.addEventListener('click', this.props.onClose);
+    this.overlayEl = document.createElement('div');
+    this.overlayEl.className = css.overlay;
+    this.overlayEl.addEventListener('click', this.props.onClose);
 
-    this.props.wrapper.appendChild(this.el);
-    this.props.wrapper.appendChild(this.overlay);
+    this.props.wrapper.appendChild(this.rootEl);
+    this.props.wrapper.appendChild(this.overlayEl);
 
     window.addEventListener('keyup', this.onWindowKeyUp);
 
     // Prevent bg scrolling on touch devices.
-    document.body.addEventListener('touchmove', preventDefault);
+    document.body.addEventListener('touchmove', this.onBodyTouchMove);
 
     this.update();
   }
@@ -115,11 +112,11 @@ class SideWinder extends Component {
     this.update();
   }
   componentWillUnmount() {
-    ReactDOM.unmountComponentAtNode(this.el);
+    ReactDOM.unmountComponentAtNode(this.rootEl);
 
     const wrapper = this.props.wrapper;
-    wrapper.removeChild(this.el);
-    wrapper.removeChild(this.overlay);
+    wrapper.removeChild(this.rootEl);
+    wrapper.removeChild(this.overlayEl);
     wrapper.classList.remove(css.wrapper);
 
     // There needs to be a class to target the body element e.g. to
@@ -127,15 +124,20 @@ class SideWinder extends Component {
     document.body.classList.remove(css.winderOpen);
 
     window.removeEventListener('keyup', this.onWindowKeyUp);
-    document.body.removeEventListener('touchmove', preventDefault);
+    document.body.removeEventListener('touchmove', this.onBodyTouchMove);
 
     if (this.stopWidthSync) {
       this.stopWidthSync();
       this.stopWidthSync = null;
     }
   }
+  onBodyTouchMove(e) {
+    if (this.props.isOpen) {
+      e.preventDefault();
+    }
+  }
   onWindowKeyUp(e) {
-    if (e.keyCode === KEYCODE_ESC) {
+    if (this.props.isOpen && e.keyCode === KEYCODE_ESC) {
       this.props.onClose();
     }
   }
@@ -160,7 +162,7 @@ class SideWinder extends Component {
 
     ReactDOM.render(r(SideWinderContent, {
       onClose: this.props.onClose,
-    }, this.props.children), this.el);
+    }, this.props.children), this.rootEl);
   }
 
   render() {
