@@ -143,13 +143,25 @@ class SideWinder extends Component {
   }
   update() {
     const isOpen = this.props.isOpen;
+    const scrollOffset = document.body.scrollTop;
+
+    let height = window.innerHeight;
+    if (window.screen && window.screen.availHeight) {
+      height = window.screen.availHeight;
+    }
+
+    console.debug(`isOpen: ${isOpen}, height: ${height}`);
 
     if (isOpen) {
-      window.scrollTo(0, 0);
       document.body.classList.add(css.winderOpen);
+      this.rootEl.style.top = `${scrollOffset}px`;
+      this.overlayEl.style.top = `${scrollOffset}px`;
+      // TODO: height
       this.props.wrapper.style.right = `${this.props.width}px`;
     } else {
       document.body.classList.remove(css.winderOpen);
+      this.rootEl.style.top = 0;
+      this.overlayEl.style.top = 0;
       this.props.wrapper.style.right = '0px';
     }
 
