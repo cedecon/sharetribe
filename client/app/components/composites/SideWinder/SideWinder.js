@@ -143,7 +143,7 @@ class SideWinder extends Component {
   }
   update() {
     const isOpen = this.props.isOpen;
-    const scrollOffset = document.body.scrollTop;
+    const scrollOffset = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
     const height = window.innerHeight;
 
     if (isOpen) {
